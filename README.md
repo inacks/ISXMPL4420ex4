@@ -2,13 +2,13 @@
 
 <p align="center">
   <a href="https://inacks.com/product/4-20ma-receiver-is4420-m1/">
-    <img src="https://inacks.com/wp-content/uploads/IS4420-M1-I2C-UART-Current-Loop-Receiver-1.jpg" alt="IS4420-M1 I2C 4-20 mA current loop receiver module" width="250">
+    <img src="https://inacks.com/wp-content/uploads/IS4420-M1-I2C-UART-Current-Loop-Receiver-1.jpg" alt="IS4420-M1 I2C/UART 4-20 mA current loop receiver module" width="250">
   </a>
 </p>
 
-This example is powered by the **IS4420-M1**, an I2C 4-20 mA current loop receiver module that lets any microcontroller with I2C read a current loop with a single I2C read.
+This example is powered by the **IS4420-M1**, an I2C/UART 4-20 mA current loop receiver module that lets any microcontroller with I2C read a current loop with a single I2C read.
 
-No analog circuitry to design. No extra libraries. No calibration needed: INACKS calibrates every module at 4 mA and 20 mA.  
+No analog circuitry to design. No level shifter: the I2C pads of the IS4420-M1 are 5 V tolerant. No extra libraries. No calibration needed: INACKS calibrates every module at 4 mA and 20 mA.  
 The IS4420-M1 contains the complete measurement side of the receiver: the loop current flows into its CIN pad, and your code reads the current in mA, the percentage of the 4-20 mA span and the module temperature from its registers.
 
 Perfect for reading pressure, temperature, flow, level and weight transmitters from an Arduino, for adding 4-20 mA inputs to your own controllers and data loggers, and for reading up to five current loops on the same I2C-serial interface.
@@ -32,7 +32,7 @@ To read the module through its UART output instead, see [ISXMPL4420ex3](https://
 
 - An [IS4420-M1 module](https://inacks.com/product/4-20ma-receiver-is4420-m1/)
 - An Arduino Uno
-- A bidirectional I2C level shifter for SDA and SCL (3.3 V to 5 V) with pull-up resistors on both sides, such as a BSS138 level shifter board
+- Two 4.7 kΩ resistors, the pull-ups for SDA and SCL
 - A 4-20 mA transmitter (2-wire or 3-wire) and its loop power supply, or a 4-20 mA current source
 - The Arduino IDE. The sketch only uses the standard `Wire` library, which comes with the IDE.
 
@@ -42,18 +42,19 @@ To read the module through its UART output instead, see [ISXMPL4420ex3](https://
 
 | IS4420-M1 pad | Connect to |
 |---|---|
-| 3V3 | Arduino 3.3V and the 3.3 V side of the level shifter |
-| GND | Arduino GND, the level shifter GND and the loop power supply 0 V |
-| SDA | Level shifter, 3.3 V side. Its 5 V side goes to Arduino SDA (A4). |
-| SCL | Level shifter, 3.3 V side. Its 5 V side goes to Arduino SCL (A5). |
+| 3V3 | Arduino 3.3V |
+| GND | Arduino GND and the loop power supply 0 V |
+| SDA | Arduino SDA (A4), and a 4.7 kΩ pull-up to the 5V pin |
+| SCL | Arduino SCL (A5), and a 4.7 kΩ pull-up to the 5V pin |
 | ADR | GND: I2C address 26 |
 | SPD | GND: 100 kHz |
 | CIN | Current loop input: the loop current flows into CIN and returns through GND |
-| TX | Not used in this example |
+| TX | Leave it floating, with nothing connected. Never connect it to GND: the module doesn't start while TX is held low. |
 
-- The IS4420-M1 takes its power (3.2 to 3.5 V) from the Arduino 3.3V pin. Power the 5 V side of the level shifter from the Arduino 5V pin.
-- SDA and SCL work at 3.3 V and the Uno's I2C pins at 5 V, so they go through the level shifter. Its resistors are the pull-ups the I2C-serial interface needs.
-- With a 3.3 V board, connect SDA and SCL directly, with a 4.7 kΩ pull-up to 3.3 V on each.
+- The IS4420-M1 takes its 3.3 V supply from the Arduino 3.3V pin.
+- The SDA and SCL pads are 5 V tolerant, so they connect straight to the Uno's I2C pins, with no level shifter. The IS4420-M1 has no pull-ups of its own: the two 4.7 kΩ resistors to the 5V pin are the pull-ups the I2C-serial interface needs.
+- With the pull-ups at 5 V, keep the IS4420-M1 powered whenever that 5 V is present: unpowered, its pads accept 4 V at most. Here the Uno powers both, so they're always on together.
+- With a 3.3 V board, pull SDA and SCL up to 3.3 V instead.
 - On other Arduino boards, use the board's SDA and SCL pins, for example pins 20 and 21 on the Arduino Mega 2560.
 - With a 2-wire transmitter: loop power supply + to the transmitter +, the transmitter - to CIN, and the loop power supply 0 V to GND.
 - With a 3-wire transmitter: the transmitter output to CIN, and the transmitter 0 V and the loop power supply 0 V to GND.
@@ -142,7 +143,7 @@ The same transfer works on any microcontroller with an I2C master interface, suc
 - **Consistent readings:** each read returns a copy of the registers taken when the read starts, so the current, the percentage and the temperature always come from the same measurement.
 - **Update rate:** the IS4420-M1 updates its registers once per measurement, about every 100 ms. The sketch reads them twice a second.
 - **Clock stretching:** the IS4420-M1 holds SCL low for a few milliseconds while it prepares the data. The Arduino `Wire` library handles it.
-- **Several modules:** ADR selects the I2C address, so up to five IS4420-M1 modules can share the same I2C-serial interface. SPD selects the speed. The module reads both pads at power-up, so only change them with the module off. Then update `IS4420_ADDRESS`, and call `Wire.setClock()` to match the speed.
+- **Several modules:** ADR selects the I2C address, so up to five IS4420-M1 modules can share the same I2C-serial interface. SPD selects the speed. The module reads both pads at power-up, so only change them with the module off. Then update `IS4420_ADDRESS`, and call `Wire.setClock()` to match the speed. Faster speeds need stronger pull-ups: 2 kΩ at 400 kHz and 1 kΩ at 1 MHz.
 
   | ADR | I2C address |
   |:---:|:---:|
@@ -168,7 +169,7 @@ The same transfer works on any microcontroller with an I2C master interface, suc
 
 If the Serial Monitor shows `IS4420 not found`, the IS4420-M1 did not acknowledge the I2C transfer. One such line right after power-up is normal: the module answers about 0.5 s after power-up. If it keeps showing, check:
 
-- The SDA and SCL connections through the level shifter, and that both sides of the level shifter are powered.
+- SDA on A4 and SCL on A5, and the 4.7 kΩ pull-ups to the 5V pin.
 - The 3V3 and GND connections.
 - ADR and SPD, both connected to GND in this example. The module reads them at power-up, so power-cycle it after changing them.
 
@@ -176,13 +177,13 @@ If the Serial Monitor shows `IS4420 not found`, the IS4420-M1 did not acknowledg
 |---|---|
 | About `0.00 mA   -25.0 %` | There's no loop current. Check the CIN connection, the transmitter and its loop power supply, and that the loop power supply 0 V goes to GND. |
 | `Over-range` | The loop current is above 21.50 mA. Check the transmitter. |
-| `No measurement` | Normal for a moment right after power-up, before the first measurement. If it keeps showing, check the 3V3 supply (3.2 to 3.5 V). |
+| `No measurement` | Normal for a moment right after power-up, before the first measurement. If it keeps showing, check the 3V3 supply (3.3 V). |
 
 ---
 
 ## Get the IS4420-M1
 
-- 🛒 **[Buy the IS4420-M1](https://inacks.com/product/4-20ma-receiver-is4420-m1/)**: I2C 4-20 mA Current Loop Receiver Module
+- 🛒 **[Buy the IS4420-M1](https://inacks.com/product/4-20ma-receiver-is4420-m1/)**: I2C/UART 4-20 mA Current Loop Receiver Module
 - 📄 [IS4420-M1 datasheet (ISDOC146)](https://inacks.com/wp-content/uploads/IS4420-M1-Datasheet-I2C-4-20mA-Current-Loop-Receiver-ISDOC146.pdf): electrical specification, pad description, UART line format, I2C memory map and hardware examples
 
 ℹ️ For more information: [www.inacks.com](https://www.inacks.com)

@@ -11,15 +11,16 @@
 //   IS4420-M1 GND -> Uno GND and the loop power supply 0 V
 //   IS4420-M1 ADR -> Uno GND                    (I2C address 26)
 //   IS4420-M1 SPD -> Uno GND                    (100 kHz, the Wire default)
-//   IS4420-M1 SDA -> level shifter -> Uno A4 (SDA)
-//   IS4420-M1 SCL -> level shifter -> Uno A5 (SCL)
+//   IS4420-M1 SDA -> Uno A4 (SDA), and a 4.7 kOhm pull-up to Uno 5V
+//   IS4420-M1 SCL -> Uno A5 (SCL), and a 4.7 kOhm pull-up to Uno 5V
 //   IS4420-M1 CIN -> current loop (the loop current returns through GND)
-//   IS4420-M1 TX is not used in this example.
+//   IS4420-M1 TX  -> leave it floating. Never connect it to GND: the module
+//                    does not start while TX is held low.
 //
-// The IS4420-M1 works at 3.3 V and the Uno's I2C pins at 5 V, so SDA and SCL
-// go through a bidirectional I2C level shifter: its 3.3 V side to the
-// IS4420-M1 and the Uno 3.3V pin, its 5 V side to the Uno and its 5V pin.
-// Its resistors are the pull-ups the I2C-serial interface needs.
+// The SDA and SCL pads of the IS4420-M1 are 5 V tolerant, so they connect
+// straight to the Uno, with no level shifter. The IS4420-M1 has no pull-ups
+// of its own: the two 4.7 kOhm resistors are the pull-ups the I2C-serial
+// interface needs.
 //
 // The IS4420-M1 reads ADR and SPD at power-up: change them only with the
 // module off.
